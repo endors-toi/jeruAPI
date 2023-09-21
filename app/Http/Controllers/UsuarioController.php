@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Hash;
 class UsuarioController extends Controller
 {
     private function generarUsername($nombre, $apellido){
+        $nombre = str_replace('ñ', 'n', $nombre);
+        $apellido = str_replace('ñ', 'n', $apellido);
+
         $nombre = strtolower(preg_replace('/[^\p{L}\-]/u', '', $nombre));
         $apellido = strtolower(preg_replace('/[^\p{L}\-]/u', '', $apellido));
 
