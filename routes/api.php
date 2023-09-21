@@ -10,9 +10,9 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\UsuarioController;
 
 
-Route::resource('productos', ProductoController::class);
-Route::resource('ingredientes', IngredienteController::class);
-Route::resource('ordenes', OrdenController::class);
-Route::resource('categorias', CategoriaController::class);
+Route::resource('productos', ProductoController::class)->only(['index','show','store','destroy','update']);
+Route::resource('ingredientes', IngredienteController::class)->only(['index','show','store','destroy','update']);
+Route::resource('ordenes', OrdenController::class)->only(['index','show','store','destroy','update'])->parameters(['ordenes' => 'orden']);
+Route::resource('categorias', CategoriaController::class)->only(['index','show','store','destroy','update']);
 Route::resource('usuarios', UsuarioController::class)->only(['index','show','store','destroy','update']);
 
