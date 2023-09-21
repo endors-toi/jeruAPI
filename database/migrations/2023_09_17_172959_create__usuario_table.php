@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('id_rol')->references('id')->on('roles');
             $table->string('nombre', 20);
             $table->string('apellido', 20);
-            $table->string('nombre_usuario', 20)->unique();
+            $table->string('nombre_usuario', 41)->unique();
             $table->string('contrasena', 255);
         });
     }

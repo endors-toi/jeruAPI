@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class UsuarioRequest extends FormRequest
 {
@@ -22,9 +23,8 @@ class UsuarioRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => 'required|max:20',
-            'apellido' => 'required|max:20',
-            'nombre_usuario' => 'required|min:3|max:20|unique:usuarios',
+            'nombre' => 'required|max:20|regex:/^[\p{L}\-]+$/u',
+            'apellido' => 'required|max:20|regex:/^[\p{L}\-]+$/u',
             'contrasena' => 'required|max:255',
             'id_rol' => 'required|exists:roles,id',
         ];
@@ -35,8 +35,10 @@ class UsuarioRequest extends FormRequest
         return [
             'nombre.required' => 'El nombre es obligatorio',
             'nombre.max' => 'El nombre no puede tener más de 20 caracteres',
+            'nombre.regex' => 'El nombre solo puede contener letras',
             'apellido.required' => 'El apellido es obligatorio',
             'apellido.max' => 'El apellido no puede tener más de 20 caracteres',
+            'apellido.regex' => 'El apellido solo puede contener letras',
             'nombre_usuario.required' => 'El nombre de usuario es obligatorio',
             'nombre_usuario.min' => 'El nombre de usuario debe tener al menos 3 caracteres',
             'nombre_usuario.max' => 'El nombre de usuario no puede tener más de 20 caracteres',

@@ -6,9 +6,27 @@ use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Http\Requests\UsuarioRequest;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
+    private function generarUsername($nombre, $apellido){
+        $nombre = strtolower(preg_replace('/[^\p{L}\-]/u', '', $nombre));
+        $apellido = strtolower(preg_replace('/[^\p{L}\-]/u', '', $apellido));
+
+        $usuarioBase = strtolower($nombre . '_' . $apellido);
+        $usuario = $usuarioBase;
+        $i = 1;
+
+        while (Usuario::where('nombre_usuario', $usuario)->exists()) {
+            $usuario = $usuarioBase . $i;
+            $i++;
+        }
+
+        return $usuario;
+    }
+
     /* (!!) Es posible que debamos hacer try-catch en cada save() y delete()
             para manejar errores de base de datos
     */
@@ -25,6 +43,9 @@ class UsuarioController extends Controller
 
     public function store(UsuarioRequest $request)
     {
+        // Registra el request para debug
+        Log::info('Datos del Request:', $request->all());
+
         /* Recibe datos del usuario en formato JSON con los siguientes campos:
             nombre, apellido, nombre_usuario, contrasena, id_rol
            Devuelve error 422 si no se cumplen las validaciones
@@ -32,7 +53,7 @@ class UsuarioController extends Controller
         $usuario = new Usuario();
         $usuario->nombre = $request->nombre;
         $usuario->apellido = $request->apellido;
-        $usuario->nombre_usuario = $request->nombre_usuario;
+        $usuario->nombre_usuario = $this->generarUsername($request->nombre, $request->apellido);
         $usuario->contrasena = bcrypt($request->contrasena);
         $usuario->id_rol = $request->id_rol;
 
@@ -68,36 +89,53 @@ class UsuarioController extends Controller
     }
 
     public function update(UsuarioRequest $request, int $id)
-    {
-        /* Se busca el usuario por su id,
-            si no existe, retorna 404
-        */
-        try {
-            $usuario = Usuario::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Usuario no encontrado',
-            ], 404);
-        }
+{
+    Log::info('Request data:', $request->all());
 
-        /* Recibe y realiza cambios en el usuario en formato JSON con los siguientes campos:
-            nombre, apellido, nombre_usuario, contrasena, id_rol
-           Devuelve error 422 si no se cumplen las validaciones
-        */
+    $usuario = Usuario::find($id);
+    $changed = false;
+    $nameChanged = false;
+
+    if ($usuario->nombre !== $request->nombre) {
         $usuario->nombre = $request->nombre;
-        $usuario->apellido = $request->apellido;
-        $usuario->nombre_usuario = $request->nombre_usuario;
-        $usuario->contrasena = bcrypt($request->contrasena);
-        $usuario->id_rol = $request->id_rol;
+        $changed = true;
+        $nameChanged = true;
+    }
 
-        /* Si pasan las validaciones, se actualiza el usuario.
-        */
+    if ($usuario->apellido !== $request->apellido) {
+        $usuario->apellido = $request->apellido;
+        $changed = true;
+        $nameChanged = true;
+    }
+
+    if ($nameChanged) {
+        $usuario->nombre_usuario = $this->generarUsername($request->nombre, $request->apellido);
+    }
+
+    if (!Hash::check($request->contrasena, $usuario->contrasena)) {
+        $usuario->contrasena = bcrypt($request->contrasena);
+        $changed = true;
+    }
+
+    if ($usuario->id_rol !== $request->id_rol) {
+        $usuario->id_rol = $request->id_rol;
+        $changed = true;
+    }
+
+    if ($changed) {
         $usuario->save();
         return response()->json([
             'mensaje' => 'Usuario actualizado exitosamente',
             'usuario' => $usuario,
+        ], 204);
+    } else {
+        return response()->json([
+            'mensaje' => 'No se detectaron cambios en el usuario',
+            'usuario' => $usuario,
         ], 200);
     }
+}
+
 
     public function destroy(int $id)
     {
