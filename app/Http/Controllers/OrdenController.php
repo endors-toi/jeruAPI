@@ -2,63 +2,82 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Orden;
+use App\Http\Requests\OrdenRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class OrdenController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $ordenes = Orden::with('usuario')->get();
+        return response()->json([
+            'ordenes' => $ordenes,
+        ], 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show(int $id)
     {
-        //
+        try {
+            $orden = Orden::with('usuario')->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'mensaje' => 'Orden no encontrada',
+            ], 404);
+        }
+
+        return response()->json([
+            'orden' => $orden,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(OrdenRequest $request)
     {
-        //
+        $orden = new Orden();
+        $orden->id_usuario = $request->id_usuario;
+        $orden->estado = $request->estado;
+        $orden->nombre_cliente = $request->nombre_cliente;
+
+        $orden->save();
+        return response()->json([
+            'mensaje' => 'Orden creada exitosamente',
+            'orden' => $orden,
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(OrdenRequest $request, int $id)
     {
-        //
+        try {
+            $orden = Orden::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'mensaje' => 'Orden no encontrada',
+            ], 404);
+        }
+
+        $orden->id_usuario = $request->id_usuario;
+        $orden->estado = $request->estado;
+        $orden->nombre_cliente = $request->nombre_cliente;
+
+        $orden->save();
+        return response()->json([
+            'mensaje' => 'Orden actualizada exitosamente',
+            'orden' => $orden,
+        ], 204);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(int $id)
     {
-        //
-    }
+        $orden = Orden::find($id);
+        if (!$orden) {
+            return response()->json([
+                'mensaje' => 'Orden no encontrada',
+            ], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $orden->delete();
+        return response()->json([
+            'mensaje' => 'Orden eliminada exitosamente',
+        ], 204);
     }
 }

@@ -2,63 +2,78 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Categoria;
+use App\Http\Requests\CategoriaRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CategoriaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $categorias = Categoria::all();
+        return response()->json([
+            'categorias' => $categorias,
+        ], 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show(int $id)
     {
-        //
+        try {
+            $categoria = Categoria::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'mensaje' => 'Categoria no encontrada',
+            ], 404);
+        }
+
+        return response()->json([
+            'categoria' => $categoria,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(CategoriaRequest $request)
     {
-        //
+        $categoria = new Categoria();
+        $categoria->nombre = $request->nombre;
+
+        $categoria->save();
+        return response()->json([
+            'mensaje' => 'Categoria creada exitosamente',
+            'categoria' => $categoria,
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(CategoriaRequest $request, int $id)
     {
-        //
+        try {
+            $categoria = Categoria::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'mensaje' => 'Categoria no encontrada',
+            ], 404);
+        }
+
+        $categoria->nombre = $request->nombre;
+
+        $categoria->save();
+        return response()->json([
+            'mensaje' => 'Categoria actualizada exitosamente',
+            'categoria' => $categoria,
+        ], 204);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(int $id)
     {
-        //
-    }
+        $categoria = Categoria::find($id);
+        if (!$categoria) {
+            return response()->json([
+                'mensaje' => 'Categoria no encontrada',
+            ], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $categoria->delete();
+        return response()->json([
+            'mensaje' => 'Categoria eliminada exitosamente',
+        ], 204);
     }
 }

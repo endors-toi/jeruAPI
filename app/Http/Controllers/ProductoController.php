@@ -2,63 +2,82 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Producto;
+use App\Http\Requests\ProductoRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ProductoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $productos = Producto::with('categoria')->get();
+        return response()->json([
+            'productos' => $productos,
+        ], 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show(int $id)
     {
-        //
+        try {
+            $producto = Producto::with('categoria')->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'mensaje' => 'Producto no encontrado',
+            ], 404);
+        }
+
+        return response()->json([
+            'producto' => $producto,
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(ProductoRequest $request)
     {
-        //
+        $producto = new Producto();
+        $producto->nombre = $request->nombre;
+        $producto->id_categoria = $request->id_categoria;
+        $producto->precio = $request->precio;
+
+        $producto->save();
+        return response()->json([
+            'mensaje' => 'Producto creado exitosamente',
+            'producto' => $producto,
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(ProductoRequest $request, int $id)
     {
-        //
+        try {
+            $producto = Producto::findOrFail($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'mensaje' => 'Producto no encontrado',
+            ], 404);
+        }
+
+        $producto->nombre = $request->nombre;
+        $producto->id_categoria = $request->id_categoria;
+        $producto->precio = $request->precio;
+
+        $producto->save();
+        return response()->json([
+            'mensaje' => 'Producto actualizado exitosamente',
+            'producto' => $producto,
+        ], 204);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(int $id)
     {
-        //
-    }
+        $producto = Producto::find($id);
+        if (!$producto) {
+            return response()->json([
+                'mensaje' => 'Producto no encontrado',
+            ], 404);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $producto->delete();
+        return response()->json([
+            'mensaje' => 'Producto eliminado exitosamente',
+        ], 204);
     }
 }
