@@ -10,25 +10,12 @@ class CategoriaController extends Controller
 {
     public function index()
     {
-        $categorias = Categoria::all();
-        return response()->json([
-            'categorias' => $categorias,
-        ], 200);
+        return Categoria::all();
     }
 
-    public function show(int $id)
+    public function show(Categoria $categoria)
     {
-        try {
-            $categoria = Categoria::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Categoria no encontrada',
-            ], 404);
-        }
-
-        return response()->json([
-            'categoria' => $categoria,
-        ], 200);
+        return $categoria;
     }
 
     public function store(CategoriaRequest $request)
@@ -43,16 +30,8 @@ class CategoriaController extends Controller
         ], 201);
     }
 
-    public function update(CategoriaRequest $request, int $id)
+    public function update(CategoriaRequest $request, Categoria $categoria)
     {
-        try {
-            $categoria = Categoria::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Categoria no encontrada',
-            ], 404);
-        }
-
         $categoria->nombre = $request->nombre;
 
         $categoria->save();
@@ -62,15 +41,8 @@ class CategoriaController extends Controller
         ], 204);
     }
 
-    public function destroy(int $id)
+    public function destroy(Categoria $categoria)
     {
-        $categoria = Categoria::find($id);
-        if (!$categoria) {
-            return response()->json([
-                'mensaje' => 'Categoria no encontrada',
-            ], 404);
-        }
-
         $categoria->delete();
         return response()->json([
             'mensaje' => 'Categoria eliminada exitosamente',

@@ -10,25 +10,12 @@ class ProductoController extends Controller
 {
     public function index()
     {
-        $productos = Producto::with('categoria')->get();
-        return response()->json([
-            'productos' => $productos,
-        ], 200);
+        return Producto::all();
     }
 
-    public function show(int $id)
+    public function show(Producto $producto)
     {
-        try {
-            $producto = Producto::with('categoria')->findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Producto no encontrado',
-            ], 404);
-        }
-
-        return response()->json([
-            'producto' => $producto,
-        ], 200);
+        return $producto;
     }
 
     public function store(ProductoRequest $request)
@@ -45,16 +32,8 @@ class ProductoController extends Controller
         ], 201);
     }
 
-    public function update(ProductoRequest $request, int $id)
+    public function update(ProductoRequest $request, Producto $producto)
     {
-        try {
-            $producto = Producto::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Producto no encontrado',
-            ], 404);
-        }
-
         $producto->nombre = $request->nombre;
         $producto->id_categoria = $request->id_categoria;
         $producto->precio = $request->precio;
@@ -66,15 +45,8 @@ class ProductoController extends Controller
         ], 204);
     }
 
-    public function destroy(int $id)
+    public function destroy(Producto $producto)
     {
-        $producto = Producto::find($id);
-        if (!$producto) {
-            return response()->json([
-                'mensaje' => 'Producto no encontrado',
-            ], 404);
-        }
-
         $producto->delete();
         return response()->json([
             'mensaje' => 'Producto eliminado exitosamente',

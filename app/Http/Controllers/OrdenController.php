@@ -10,25 +10,12 @@ class OrdenController extends Controller
 {
     public function index()
     {
-        $ordenes = Orden::with('usuario')->get();
-        return response()->json([
-            'ordenes' => $ordenes,
-        ], 200);
+        return Orden::all();
     }
 
-    public function show(int $id)
+    public function show(Orden $orden)
     {
-        try {
-            $orden = Orden::with('usuario')->findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Orden no encontrada',
-            ], 404);
-        }
-
-        return response()->json([
-            'orden' => $orden,
-        ], 200);
+        return $orden;
     }
 
     public function store(OrdenRequest $request)
@@ -45,16 +32,8 @@ class OrdenController extends Controller
         ], 201);
     }
 
-    public function update(OrdenRequest $request, int $id)
+    public function update(OrdenRequest $request, Orden $orden)
     {
-        try {
-            $orden = Orden::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Orden no encontrada',
-            ], 404);
-        }
-
         $orden->id_usuario = $request->id_usuario;
         $orden->estado = $request->estado;
         $orden->nombre_cliente = $request->nombre_cliente;
@@ -66,15 +45,8 @@ class OrdenController extends Controller
         ], 204);
     }
 
-    public function destroy(int $id)
+    public function destroy(Orden $orden)
     {
-        $orden = Orden::find($id);
-        if (!$orden) {
-            return response()->json([
-                'mensaje' => 'Orden no encontrada',
-            ], 404);
-        }
-
         $orden->delete();
         return response()->json([
             'mensaje' => 'Orden eliminada exitosamente',

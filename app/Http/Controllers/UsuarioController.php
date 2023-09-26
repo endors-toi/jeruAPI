@@ -13,40 +13,23 @@ class UsuarioController extends Controller
 {
     public function index()
     {
-        /* Retorna todos los usuarios
+        /* Retorna todos los Usuarios
         */
-        $usuarios = Usuario::all();
-        return response()->json([
-            'usuarios' => $usuarios,
-        ], 200);
+        return Usuario::all();
     }
 
-    public function show(int $id)
+    public function show(Usuario $usuario)
     {
-        /* Se busca el usuario por su id,
-            si no existe, retorna 404
+        /* Se retorna Usuario obtenido de la ID en la URL.
+           Si Laravel falla en inyectar el modelo, retorna 404
         */
-        try {
-            $usuario = Usuario::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Usuario no encontrado',
-            ], 404);
-        }
-
-        /* Si se encuentra el usuario,
-            se retorna en formato JSON
-        */
-        return response()->json([
-            'usuario' => $usuario,
-        ], 200);
+        return $usuario;
     }
 
     public function store(UsuarioRequest $request)
     {
-        /* Recibe datos del usuario en formato JSON con los siguientes campos:
-            nombre, apellido, nombre_usuario, contrasena, id_rol
-           Devuelve error 422 si no se cumplen las validaciones
+        /* Laravel traduce el JSON recibido y lo pasa por el UsuarioRequest.
+           Devuelve error 422 si no se cumplen las validaciones.
         */
         $usuario = new Usuario();
         $usuario->nombre = $request->nombre;
@@ -56,7 +39,7 @@ class UsuarioController extends Controller
         $usuario->id_rol = $request->id_rol;
 
         /* Si pasan las validaciones, se crea el usuario
-            y se retorna mensaje de confirmación estándar
+           y se retorna mensaje de confirmación estándar + el usuario creado
         */
         $usuario->save();
         return response()->json([
@@ -65,26 +48,16 @@ class UsuarioController extends Controller
         ], 201);
     }
 
-    public function update(UsuarioRequest $request, int $id)
+    public function update(UsuarioRequest $request, Usuario $usuario)
     {
-        Log::info('Request data:', $request->all());
-
-        /* Se busca el usuario por su id,
-            si no existe, retorna 404
+        /* Manera alternativa de realizar update.
+            Revisa campo por campo si existen cambios a través de $changed.
+            Determina si se debe regenerar el nombre de usuario a través de $nameChanged.
         */
-        try {
-            $usuario = Usuario::findOrFail($id);
-        } catch (ModelNotFoundException $e) {
-            return response()->json([
-                'mensaje' => 'Usuario no encontrado',
-            ], 404);
-        }
+
         $changed = false;
         $nameChanged = false;
 
-        /* Condicionalmente cambia cada campo
-            si es que se detecta un cambio
-        */
         if ($usuario->nombre !== $request->nombre) {
             $usuario->nombre = $request->nombre;
             $changed = true;
@@ -111,8 +84,7 @@ class UsuarioController extends Controller
             $changed = true;
         }
 
-        /* Si se detectaron cambios, se guarda el usuario
-            y se retorna 204
+        /* Si se detectaron cambios, se realiza save().
         */
         if ($changed) {
             $usuario->save();
@@ -129,20 +101,10 @@ class UsuarioController extends Controller
     }
 
 
-    public function destroy(int $id)
+    public function destroy(Usuario $usuario)
     {
-        /* Se busca el usuario por su id,
-            si no existe, retorna 404
-        */
-        $usuario = Usuario::find($id);
-        if (!$usuario) {
-            return response()->json([
-                'mensaje' => 'Usuario no encontrado',
-            ], 404);
-        }
-
-        /* Si se encuentra el usuario,
-            se elimina y se retorna 204
+        /* Se elimina el Usuario correspondiente
+            al ID presente en la URL (si existe)
         */
         $usuario->delete();
         return response()->json([
@@ -158,7 +120,7 @@ class UsuarioController extends Controller
         $nombre = strtolower(preg_replace('/[^\p{L}\-]/u', '', $nombre));
         $apellido = strtolower(preg_replace('/[^\p{L}\-]/u', '', $apellido));
 
-        /* Genera nombre de usuario.
+        /* Genera nombre de usuario en este formato: nombre_apellido
             Si ya existe, se le agrega un número correlacional al final
         */
         $usuarioBase = strtolower($nombre . '_' . $apellido);

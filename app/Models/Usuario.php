@@ -13,6 +13,7 @@ class Usuario extends Model
 
     protected $primaryKey = 'id';
     protected $table = 'usuarios';
+    protected $hidden = ['contrasena'];
     public $timestamps = false;
 
     public function rol()
