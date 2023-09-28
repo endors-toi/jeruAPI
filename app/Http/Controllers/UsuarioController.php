@@ -5,12 +5,31 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Http\Requests\UsuarioRequest;
+use App\Http\Requests\LoginRequest;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UsuarioController extends Controller
 {
+    public function login(LoginRequest $request){
+        $credentials = $request->only('nombre_usuario', 'contrasena');
+
+        if(!$token = JWTAuth::attempt($credentials)){
+            return response()->json([
+                'mensaje' => 'Credenciales inválidas',
+            ], 401);
+        };
+
+        $usuario = Usuario::where('nombre_usuario', $request->nombre_usuario)->first();
+
+        return response()->json([
+            'user' => $usuario,
+            'token' => $token,
+        ]);
+    }
+
     public function index()
     {
         /* Retorna todos los Usuarios

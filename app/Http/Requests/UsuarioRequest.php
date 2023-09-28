@@ -22,12 +22,18 @@ class UsuarioRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'nombre' => 'required|max:20|regex:/^[\p{L}\-]+$/u',
             'apellido' => 'required|max:20|regex:/^[\p{L}\-]+$/u',
-            'contrasena' => 'required|max:255',
+            'contrasena' => 'required|max:128',
             'id_rol' => 'required|exists:roles,id',
         ];
+
+        if($this->method() == 'PUT'){
+            $rules['contrasena'] = 'max:128';
+        }
+
+        return $rules;
     }
 
     public function messages(): array
